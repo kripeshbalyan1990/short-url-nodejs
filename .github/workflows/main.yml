@@ -1,0 +1,81 @@
+name: Node.js CI with Docker and SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run SonarQube analysis (static code analysis) if tests pass
+      - name: Run SonarQube Analysis
+        if: success()  # Only run this if previous steps succeeded
+        uses: sonarsource/sonarcloud-github-action@v1.1
+        with:
+          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
+          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}  # SonarQube server URL or SonarCloud URL
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Send Slack notification if SonarQube analysis failed
+      - name: Send Slack notification if SonarQube analysis failed
+        if: failure()  # This will run only if the SonarQube analysis step fails
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"SonarQube analysis failed in the GitHub Actions workflow! Please check the logs."}' \
+          $SLACK_WEBHOOK_URL
+
+      # Build Docker image if SonarQube analysis succeeds
+      - name: Build Docker image
+        if: success()  # This will run only if previous steps succeed (tests and SonarQube)
+        run: |
+          # Log in to Docker Hub (or any registry)
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          
+          # Build the Docker image
+          docker build -t short-url-nodejs .
+
+          # Push the image to Docker Hub
+          docker push short-url-nodejs
+
+      # Send Slack notification if Docker image build failed
+      - name: Send Slack notification if Docker build failed
+        if: failure()  # This will run only if the Docker build step fails
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"Docker image build failed in the GitHub Actions workflow! Please check the logs."}' \
+          $SLACK_WEBHOOK_URL
+
+      # Optionally send Slack notification if Docker build succeeds
+      - name: Send Slack notification if Docker build succeeds
+        if: success()  # This will run only if the Docker build succeeds
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"Docker image built and pushed successfully for the Express app!"}' \
+          $SLACK_WEBHOOK_URL
