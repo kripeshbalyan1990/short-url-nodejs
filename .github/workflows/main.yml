@@ -50,10 +50,10 @@ jobs:
         if: success()  # This will run only if previous steps succeed (tests and SonarQube)
         run: |
           # Log in to Docker Hub (or any registry)
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin docker.io
           
           # Build the Docker image
-          docker build -t short-url-nodejs .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/short-url-nodejs .
 
           # Push the image to Docker Hub
           docker push short-url-nodejs
