@@ -56,7 +56,7 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/short-url-nodejs .
 
           # Push the image to Docker Hub
-          docker push short-url-nodejs
+          docker push ${{ secrets.DOCKER_USERNAME }}/short-url-nodejs
 
       # Send Slack notification if Docker image build failed
       - name: Send Slack notification if Docker build failed
