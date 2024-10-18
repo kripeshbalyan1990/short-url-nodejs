@@ -30,12 +30,11 @@ jobs:
       # Run SonarQube analysis (static code analysis) if tests pass
       - name: Run SonarQube Analysis
         if: success()  # Only run this if previous steps succeeded
-        uses: sonarsource/sonarcloud-github-action@v1.1
-        with:
-          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
-          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}  # SonarQube server URL or SonarCloud URL
+        uses: sonarsource/sonarqube-scan-action@v3
+        # SonarQube server URL or SonarCloud URL
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       # Send Slack notification if SonarQube analysis failed
       - name: Send Slack notification if SonarQube analysis failed
