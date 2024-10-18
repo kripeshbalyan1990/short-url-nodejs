@@ -31,7 +31,6 @@ jobs:
       - name: Run SonarQube Analysis
         if: success()  # Only run this if previous steps succeeded
         uses: sonarsource/sonarqube-scan-action@v3
-        # SonarQube server URL or SonarCloud URL
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
